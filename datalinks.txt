@@ -1,0 +1,2 @@
+Land-Sea mask: https://github.com/yyr/ncl/blob/master/ni/src/examples/data/cdf/landsea.nc
+Mrso data: https://esgf-node.llnl.gov/search/esgf-llnl/

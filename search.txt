@@ -1,0 +1,27 @@
+CMIP5 AND mrso AND land AND r1i1p1 AND RCP* AND netCDF AND mon
+
+Data used:
+
+CMIP5 AND mrso AND land AND r1i1p1 AND RCP* AND netCDF AND mon
+----
+University of Toyoko Atmosphere and Ocean Research Institute (MPI-ESM)
+Meterological Research Institute (MRI-CGCM3)
+National Institute of Meterological Research (HadGEM2-AO)
+
+CMIP5 AND mrsos AND land AND r1i1p1 AND RCP* AND netCDF AND mon
+----
+Geophysical Fluid Dynamics Labratory (GFDL-CM3)
+Meterological Research Institute (MRI-CGCM3)
+University Of Toyko (MIROC5)
+
+CMIP5 AND pr AND atmos AND r1i1p1 AND RCP* AND netCDF AND mon
+----
+Meterological Research Institute (MRI-CGCM3)
+National Institute of Meterological Research (HadGEM2-AO)
+University Of Toyko (MIROC5)
+
+CMIP5 AND evspsblsoi AND land AND r1i1p1 AND RCP* AND netCDF AND mon
+----
+Geophysical Fluid Dynamics Labratory (GFDL-ESM2M)
+National Institute of Meterological Research (HadGEM2-AO)
+University Of Toyko (MIROC5)
