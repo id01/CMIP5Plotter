@@ -13,11 +13,11 @@ import os.path
 
 # Variables for study area of interest
 dataDir = "data"
-cacheDir = "cache/mrso"
+cacheDir = "cache/pr"
 landSeaFile = "landsea.nc"
-dataFilesRCP26 = ["mrso_Lmon_HadGEM2-AO_rcp26_r1i1p1_200601-210012.nc", "mrso_Lmon_MPI-ESM-LR_rcp26_r1i1p1_200601-210012.nc", "mrso_Lmon_MRI-CGCM3_rcp26_r1i1p1_200601-210012.nc"]
-dataFilesRCP85 = ["mrso_Lmon_HadGEM2-AO_rcp85_r1i1p1_200601-210012.nc", "mrso_Lmon_MPI-ESM-LR_rcp85_r1i1p1_200601-210012.nc", "mrso_Lmon_MRI-CGCM3_rcp85_r1i1p1_200601-210012.nc"]
-varOfInterest = "mrso"
+dataFilesRCP26 = ["pr_Amon_CanESM2_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp26_r1i1p1_200601-210012.nc"]
+dataFilesRCP85 = ["pr_Amon_CanESM2_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp85_r1i1p1_200601-210012.nc"]
+varOfInterest = "pr"
 numMonths = 1140
 startYear = 2006
 latitudeRes = 90
@@ -59,9 +59,9 @@ if not os.path.exists(cacheDir + '/processedData.npz'):
 	landSeaData = landSea.variables['LSMASK'][:]
 	landSeaInterpGen = interp.interp2d(np.arange(landSeaData.shape[1]), np.arange(landSeaData.shape[0]), landSeaData)
 	landSeaDataInterp = landSeaInterpGen(np.linspace(0, landSeaData.shape[1], longitudeRes), np.linspace(0, landSeaData.shape[0], latitudeRes))
-	landSeaMask = np.tile(landSeaDataInterp == 0, (numMonths, 1, 1))
+	#landSeaMask = np.tile(landSeaDataInterp == 0, (numMonths, 1, 1))
 	def removeOceans(data):
-		return ma.masked_array(data, mask=landSeaMask)
+		return ma.masked_array(data, False) # We don't need to remove oceans for pr
 
 	# Remove oceans
 	dataRCP26 = removeOceans(dataRCP26)
@@ -95,7 +95,8 @@ if not os.path.exists(cacheDir + '/processedData.npz'):
 		perc85=percRCP85, perc85_mask=percRCP85.mask,
 		diff26=diffRCP26, diff26_mask=diffRCP26.mask,
 		diff85=diffRCP85, diff85_mask=diffRCP85.mask,
-		diffRCP=diffRCPs, diffRCP_mask=diffRCPs.mask)
+		diffRCP=diffRCPs, diffRCP_mask=diffRCPs.mask,
+		landSea=landSeaDataInterp)
 
 # Load processed data from cache
 allData = np.load(cacheDir + '/processedData.npz')
@@ -105,6 +106,7 @@ diffPerc = percRCP85 - percRCP26
 diffRCP26 = ma.masked_array(allData['diff26'], allData['diff26_mask'])
 diffRCP85 = ma.masked_array(allData['diff85'], allData['diff85_mask'])
 diffRCPs = ma.masked_array(allData['diffRCP'], allData['diffRCP_mask'])
+landSeaData = allData['landSea']
 
 ## PART 3: Draw graph
 
@@ -116,13 +118,13 @@ fig.subplots_adjust(bottom=0.15)
 time_index = 0
 
 # Construct data sets
-titleDiff = {'plt_1_2_units': 'Soil Moisture Anomaly Since Jan 2006', 'diff_title': 'Difference in Soil Moisture With Higher Global Warming'}
+titleDiff = {'plt_1_2_units': 'Precipitation Anomaly Since Jan 2006', 'diff_title': 'Difference in Precipitation With Higher Global Warming'}
 unitsDiff = '% Change'
 rangesDiff = {'plt_1_2': [-1,1], 'plt_3': [-1,1]}
 ampDiff = {'plt_1_2': 2, 'plt_3': 2}
 dataDiff = {'rcp26': diffRCP26, 'rcp85': diffRCP85, 'diff': diffRCPs}
-titlePerc = {'plt_1_2_units': 'Percentile Soil Moisture', 'diff_title': 'Difference in Soil Moisture Percentile With Higher Global Warming'}
-unitsPerc = '%ile Moisture'
+titlePerc = {'plt_1_2_units': 'Percentile Precipitation', 'diff_title': 'Difference in Precipitation Percentile With Higher Global Warming'}
+unitsPerc = '%ile Precipitation'
 rangesPerc = {'plt_1_2': [0,1], 'plt_3': [-1,1]}
 ampPerc = {'plt_1_2': 1, 'plt_3': 2}
 dataPerc = {'rcp26': percRCP26, 'rcp85': percRCP85, 'diff': diffPerc}
@@ -131,23 +133,26 @@ dataPerc = {'rcp26': percRCP26, 'rcp85': percRCP85, 'diff': diffPerc}
 cmap = matplotlib.cm.jet_r
 cmap.set_bad('black',1)
 # Create title
-plt.suptitle("Projected Effect of Global Warming on Soil Moisture Over Time")
-# Plot RCP 2.6, 8.5, and difference
+plt.suptitle("Projected Effect of Global Warming on Precipitation Over Time")
+# Plot RCP 2.6, 8.5, and difference, while overlaying mask as a semi-transparent black
 def changeDataset(titles, units, ranges, amplification, data):
 	subplt1 = plt.subplot(2,2,1)
 	im_h26 = subplt1.imshow(amplification['plt_1_2']*data['rcp26'][time_index, :], cmap='jet_r', vmin=ranges['plt_1_2'][0], vmax=ranges['plt_1_2'][1], interpolation='nearest', origin='lower')
+	mask_26 = subplt1.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt1.set_title("%s With Low Global Warming (RCP26)" % titles['plt_1_2_units'])
 	cbar26 = plt.colorbar(im_h26, ticks=ranges['plt_1_2'], orientation='vertical')
 	cbar26.ax.set_yticklabels([str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][0]) + units, str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][1]) + units])
 
 	subplt2 = plt.subplot(2,2,2)
 	im_h85 = subplt2.imshow(amplification['plt_1_2']*data['rcp85'][time_index, :], cmap='jet_r', vmin=ranges['plt_1_2'][0], vmax=ranges['plt_1_2'][1], interpolation='nearest', origin='lower')
+	mask_85 = subplt2.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt2.set_title("%s With High Global Warming (RCP85)" % titles['plt_1_2_units'])
 	cbar85 = plt.colorbar(im_h85, ticks=ranges['plt_1_2'], orientation='vertical')
 	cbar85.ax.set_yticklabels([str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][0]) + units, str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][1]) + units])
 
 	subplt3 = plt.subplot(2,2,3)
 	im_hdiff = subplt3.imshow(amplification['plt_3']*data['diff'][time_index, :], cmap='jet_r', vmin=ranges['plt_3'][0], vmax=ranges['plt_3'][1], interpolation='nearest', origin='lower')
+	mask_diff = subplt3.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt3.set_title(titles['diff_title'])
 	cbarDiff = plt.colorbar(im_hdiff, ticks=ranges['plt_3'], orientation='vertical')
 	cbarDiff.ax.set_yticklabels([str(100.0/amplification['plt_3']*ranges['plt_3'][0]) + units, str(100.0/amplification['plt_3']*ranges['plt_3'][1]) + units])
