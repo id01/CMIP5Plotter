@@ -3,12 +3,8 @@ import numpy.ma as ma
 import matplotlib
 import matplotlib.cm
 import matplotlib.pyplot as plt
-import scipy.interpolate as interp
-import scipy.stats as stats
 from matplotlib.widgets import Button
 from matplotlib.widgets import Slider
-import os
-import os.path
 
 # Variables for loading and interpreting processed data
 processedDataFile = "pr.npz"
