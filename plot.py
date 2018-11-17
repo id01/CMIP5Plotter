@@ -15,7 +15,7 @@ diffPerc = percRCP85 - percRCP26
 diffRCP26 = ma.masked_array(allData['diff26'], allData['diff26_mask'])
 diffRCP85 = ma.masked_array(allData['diff85'], allData['diff85_mask'])
 diffRCPs = ma.masked_array(allData['diffRCP'], allData['diffRCP_mask'])
-if overlayLandSea:
+if realm == 'atmos':
 	landSeaData = allData['landSea']
 
 ## PART 3: Draw graph
@@ -56,7 +56,7 @@ def changeDataset(titles, units, ranges, amplification, data):
 	cbarDiff = plt.colorbar(im_hdiff, ticks=ranges['plt_3'], orientation='vertical')
 	cbarDiff.ax.set_yticklabels([str(100.0/amplification['plt_3']*ranges['plt_3'][0]) + units, str(100.0/amplification['plt_3']*ranges['plt_3'][1]) + units])
 
-	if overlayLandSea:
+	if realm == 'atmos':
 		mask_26 = subplt1.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 		mask_85 = subplt2.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 		mask_diff = subplt3.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)

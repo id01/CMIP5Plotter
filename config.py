@@ -1,12 +1,15 @@
-### Configuration for process.py
+### Configuration for both process.py and plot.py
 # mrso config
 
+# process.py configuration
 dataDir = "data"
 cacheDir = "cache/mrso"
 landSeaFile = "landsea.nc"
 dataFilesRCP26 = ["mrso_Lmon_HadGEM2-AO_rcp26_r1i1p1_200601-210012.nc", "mrso_Lmon_MPI-ESM-LR_rcp26_r1i1p1_200601-210012.nc", "mrso_Lmon_MRI-CGCM3_rcp26_r1i1p1_200601-210012.nc"]
 dataFilesRCP85 = ["mrso_Lmon_HadGEM2-AO_rcp85_r1i1p1_200601-210012.nc", "mrso_Lmon_MPI-ESM-LR_rcp85_r1i1p1_200601-210012.nc", "mrso_Lmon_MRI-CGCM3_rcp85_r1i1p1_200601-210012.nc"]
 varOfInterest = "mrso"
+
+# universal configuration
 numMonths = 1140
 startYear = 2006
 latitudeRes = 90
@@ -15,12 +18,15 @@ realm = 'land' # This must be land, sea, or atmos (landsea). If it is atmos, thi
 
 # pr config
 '''
+# process.py configuration
 dataDir = "data"
 cacheDir = "cache/pr"
 landSeaFile = "landsea.nc"
 dataFilesRCP26 = ["pr_Amon_CanESM2_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp26_r1i1p1_200601-210012.nc"]
 dataFilesRCP85 = ["pr_Amon_CanESM2_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp85_r1i1p1_200601-210012.nc"]
 varOfInterest = "pr"
+
+# universal configuration
 numMonths = 1140
 startYear = 2006
 latitudeRes = 90
@@ -31,14 +37,8 @@ realm = 'atmos' # This must be land, sea, or atmos (landsea). If it is atmos, th
 ### Configuration for plot.py
 # mrso config
 
-# Variables for loading and interpreting processed data
+# Location of the processed data
 processedDataFile = "mrso.npz"
-numMonths = 1140
-startYear = 2006
-latitudeRes = 90
-longitudeRes = 180
-play_interval = 100
-overlayLandSea = False
 
 # Data Set Settings
 suptitle = "Projected Effect of Global Warming on Soil Moisture Over Time"
@@ -50,17 +50,12 @@ titlePerc = {'plt_1_2_units': 'Percentile Soil Moisture', 'diff_title': 'Differe
 unitsPerc = '%ile Moisture'
 rangesPerc = {'plt_1_2': [0,1], 'plt_3': [-1,1]}
 ampPerc = {'plt_1_2': 1, 'plt_3': 2}
+play_interval = 100
 
 # pr config
 '''
-# Variables for loading and interpreting processed data
+# Location of the processed data
 processedDataFile = "pr.npz"
-numMonths = 1140
-startYear = 2006
-latitudeRes = 90
-longitudeRes = 180
-play_interval = 100
-overlayLandSea = True
 
 # Data Set Settings
 suptitle = "Projected Effect of Global Warming on Precipitation Over Time"
@@ -72,4 +67,5 @@ titlePerc = {'plt_1_2_units': 'Percentile Precipitation', 'diff_title': 'Differe
 unitsPerc = '%ile Precipitation'
 rangesPerc = {'plt_1_2': [0,1], 'plt_3': [-1,1]}
 ampPerc = {'plt_1_2': 1, 'plt_3': 2}
+play_interval = 100
 '''
