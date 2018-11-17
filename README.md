@@ -26,4 +26,4 @@ The configuration variables are:
 	* `play_interval`: The number of milliseconds between each frame when playing
 	* (I'll write the others later if I feel like it. I'm tired.)
 
-I have some samples of output [here](https://photos.app.goo.gl/Vox58HGd9NK9jXRv7)
+I have some samples of output [here](https://www.youtube.com/playlist?list=PL7GupXZGoKA5plnPKsafQPI9tUJp5zIOU)
