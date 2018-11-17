@@ -5,13 +5,7 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib.widgets import Slider
-
-# Variables for loading and interpreting processed data
-processedDataFile = "pr.npz"
-numMonths = 1140
-startYear = 2006
-latitudeRes = 90
-longitudeRes = 180
+from config import *
 
 # Load processed data from cache
 allData = np.load(processedDataFile)
@@ -21,9 +15,14 @@ diffPerc = percRCP85 - percRCP26
 diffRCP26 = ma.masked_array(allData['diff26'], allData['diff26_mask'])
 diffRCP85 = ma.masked_array(allData['diff85'], allData['diff85_mask'])
 diffRCPs = ma.masked_array(allData['diffRCP'], allData['diffRCP_mask'])
-landSeaData = allData['landSea']
+if overlayLandSea:
+	landSeaData = allData['landSea']
 
 ## PART 3: Draw graph
+
+# Construct data sets
+dataDiff = {'rcp26': diffRCP26, 'rcp85': diffRCP85, 'diff': diffRCPs}
+dataPerc = {'rcp26': percRCP26, 'rcp85': percRCP85, 'diff': diffPerc}
 
 # Create space for slider
 fig, ax = plt.subplots()
@@ -32,45 +31,35 @@ fig.subplots_adjust(bottom=0.15)
 # Create time index
 time_index = 0
 
-# Construct data sets
-titleDiff = {'plt_1_2_units': 'Precipitation Anomaly Since Jan 2006', 'diff_title': 'Difference in Precipitation With Higher Global Warming'}
-unitsDiff = '% Change'
-rangesDiff = {'plt_1_2': [-1,1], 'plt_3': [-1,1]}
-ampDiff = {'plt_1_2': 2, 'plt_3': 2}
-dataDiff = {'rcp26': diffRCP26, 'rcp85': diffRCP85, 'diff': diffRCPs}
-titlePerc = {'plt_1_2_units': 'Percentile Precipitation', 'diff_title': 'Difference in Precipitation Percentile With Higher Global Warming'}
-unitsPerc = '%ile Precipitation'
-rangesPerc = {'plt_1_2': [0,1], 'plt_3': [-1,1]}
-ampPerc = {'plt_1_2': 1, 'plt_3': 2}
-dataPerc = {'rcp26': percRCP26, 'rcp85': percRCP85, 'diff': diffPerc}
-
 # Change colormap settings to make masked values black
 cmap = matplotlib.cm.jet_r
 cmap.set_bad('black',1)
 # Create title
-plt.suptitle("Projected Effect of Global Warming on Precipitation Over Time")
-# Plot RCP 2.6, 8.5, and difference, while overlaying mask as a semi-transparent black
+plt.suptitle(suptitle)
+# Plot RCP 2.6, 8.5, and difference
 def changeDataset(titles, units, ranges, amplification, data):
 	subplt1 = plt.subplot(2,2,1)
 	im_h26 = subplt1.imshow(amplification['plt_1_2']*data['rcp26'][time_index, :], cmap='jet_r', vmin=ranges['plt_1_2'][0], vmax=ranges['plt_1_2'][1], interpolation='nearest', origin='lower')
-	mask_26 = subplt1.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt1.set_title("%s With Low Global Warming (RCP26)" % titles['plt_1_2_units'])
 	cbar26 = plt.colorbar(im_h26, ticks=ranges['plt_1_2'], orientation='vertical')
 	cbar26.ax.set_yticklabels([str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][0]) + units, str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][1]) + units])
 
 	subplt2 = plt.subplot(2,2,2)
 	im_h85 = subplt2.imshow(amplification['plt_1_2']*data['rcp85'][time_index, :], cmap='jet_r', vmin=ranges['plt_1_2'][0], vmax=ranges['plt_1_2'][1], interpolation='nearest', origin='lower')
-	mask_85 = subplt2.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt2.set_title("%s With High Global Warming (RCP85)" % titles['plt_1_2_units'])
 	cbar85 = plt.colorbar(im_h85, ticks=ranges['plt_1_2'], orientation='vertical')
 	cbar85.ax.set_yticklabels([str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][0]) + units, str(100.0/amplification['plt_1_2']*ranges['plt_1_2'][1]) + units])
 
 	subplt3 = plt.subplot(2,2,3)
 	im_hdiff = subplt3.imshow(amplification['plt_3']*data['diff'][time_index, :], cmap='jet_r', vmin=ranges['plt_3'][0], vmax=ranges['plt_3'][1], interpolation='nearest', origin='lower')
-	mask_diff = subplt3.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 	subplt3.set_title(titles['diff_title'])
 	cbarDiff = plt.colorbar(im_hdiff, ticks=ranges['plt_3'], orientation='vertical')
 	cbarDiff.ax.set_yticklabels([str(100.0/amplification['plt_3']*ranges['plt_3'][0]) + units, str(100.0/amplification['plt_3']*ranges['plt_3'][1]) + units])
+
+	if overlayLandSea:
+		mask_26 = subplt1.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
+		mask_85 = subplt2.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
+		mask_diff = subplt3.imshow(landSeaData, vmin=0, vmax=1, cmap='binary', interpolation='nearest', origin='lower', alpha=0.5)
 
 	return ({'rcp26': im_h26, 'rcp85': im_h85, 'diff': im_hdiff}, {'rcp26': subplt1, 'rcp85': subplt2, 'diff': subplt3}, {'rcp26': cbar26, 'rcp85': cbar85, 'diff': cbarDiff})
 
@@ -123,6 +112,26 @@ def update_depth(val):
 	heatmaps['rcp85'].set_data(amplification['plt_1_2']*data['rcp85'][time_index, :])
 	heatmaps['diff'].set_data(amplification['plt_3']*data['diff'][time_index, :])
 slider_depth.on_changed(update_depth)
+
+# Create play button
+ax_play = plt.axes([0.2, 0.02, 0.03, 0.04])
+play_button = Button(ax_play, '▶')
+playing = False
+def toggle_play(val):
+	global playing
+	playing = not playing
+	if playing:
+		play_button.color = 'grey'
+	else:
+		play_button.color = 'silver'
+play_button.on_clicked(toggle_play)
+# Create timer for play button
+timer = fig.canvas.new_timer(interval=play_interval)
+def update_depth_timer(val):
+	if playing and int(round((slider_depth.val-startYear)*12)) < numMonths-1:
+		slider_depth.set_val(slider_depth.val+0.083333333333333)
+timer.add_callback(update_depth_timer, ax)
+timer.start()
 
 # Show plot
 plt.show()

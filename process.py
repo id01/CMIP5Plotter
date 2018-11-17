@@ -3,18 +3,9 @@ import numpy.ma as ma
 from netCDF4 import Dataset
 import os
 import os.path
-
-# Variables for study area of interest
-dataDir = "data"
-cacheDir = "cache/pr"
-landSeaFile = "landsea.nc"
-dataFilesRCP26 = ["pr_Amon_CanESM2_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp26_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp26_r1i1p1_200601-210012.nc"]
-dataFilesRCP85 = ["pr_Amon_CanESM2_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_MRI-CGCM3_rcp85_r1i1p1_200601-210012.nc", "pr_Amon_GISS-E2-H_rcp85_r1i1p1_200601-210012.nc"]
-varOfInterest = "pr"
-numMonths = 1140
-startYear = 2006
-latitudeRes = 90
-longitudeRes = 180
+import scipy.interpolate as interp
+import scipy.stats as stats
+from config import *
 
 ## PART 1: Import data and combine
 
@@ -47,18 +38,22 @@ dataRCP85 = allData['rcp85']
 
 # Process data if it wasn't cached
 if not os.path.exists(cacheDir + '/processedData.npz'):
-	# Remove oceans using ocean data
+	# Remove irrelavent realms using ocean data
 	landSea = Dataset(dataDir + "/" + landSeaFile,'r')
 	landSeaData = landSea.variables['LSMASK'][:]
 	landSeaInterpGen = interp.interp2d(np.arange(landSeaData.shape[1]), np.arange(landSeaData.shape[0]), landSeaData)
 	landSeaDataInterp = landSeaInterpGen(np.linspace(0, landSeaData.shape[1], longitudeRes), np.linspace(0, landSeaData.shape[0], latitudeRes))
-	#landSeaMask = np.tile(landSeaDataInterp == 0, (numMonths, 1, 1))
-	def removeOceans(data):
-		return ma.masked_array(data, False) # We don't need to remove oceans for pr
+	# Set mask according to realm specified in config
+	if realm == 'land':
+		landSeaMask = np.tile(landSeaDataInterp == 0, (numMonths, 1, 1))
+	elif realm == 'sea':
+		landSeaMask = np.tile(landSeaDataInterp != 0, (numMonths, 1, 1))
+	elif realm == 'atmos':
+		landSeaMask = False
 
-	# Remove oceans
-	dataRCP26 = removeOceans(dataRCP26)
-	dataRCP85 = removeOceans(dataRCP85)
+	# Apply mask
+	dataRCP26 = ma.masked_array(dataRCP26, mask=landSeaMask)
+	dataRCP85 = ma.masked_array(dataRCP85, mask=landSeaMask)
 
 	# Get difference between the two RCPs and between each RCP and its initial value and divide it to a difference (-1 for -100% and +1 for +100%) for our difference graph.
 	def getPercentDifference(data1, data2):
@@ -83,12 +78,20 @@ if not os.path.exists(cacheDir + '/processedData.npz'):
 	percRCP85 = (percRCP85 - minVal)/rangeVal
 
 	# Cache our processed data
-	np.savez_compressed(cacheDir + '/processedData.npz',
-		perc26=percRCP26, perc26_mask=percRCP26.mask,
-		perc85=percRCP85, perc85_mask=percRCP85.mask,
-		diff26=diffRCP26, diff26_mask=diffRCP26.mask,
-		diff85=diffRCP85, diff85_mask=diffRCP85.mask,
-		diffRCP=diffRCPs, diffRCP_mask=diffRCPs.mask,
-		landSea=landSeaDataInterp)
+	if realm == 'atmos':
+		np.savez_compressed(cacheDir + '/processedData.npz',
+			perc26=percRCP26, perc26_mask=percRCP26.mask,
+			perc85=percRCP85, perc85_mask=percRCP85.mask,
+			diff26=diffRCP26, diff26_mask=diffRCP26.mask,
+			diff85=diffRCP85, diff85_mask=diffRCP85.mask,
+			diffRCP=diffRCPs, diffRCP_mask=diffRCPs.mask,
+			landSea=landSeaDataInterp)
+	else: # Realm is land or sea
+		np.savez_compressed(cacheDir + '/processedData.npz',
+			perc26=percRCP26, perc26_mask=percRCP26.mask,
+			perc85=percRCP85, perc85_mask=percRCP85.mask,
+			diff26=diffRCP26, diff26_mask=diffRCP26.mask,
+			diff85=diffRCP85, diff85_mask=diffRCP85.mask,
+			diffRCP=diffRCPs, diffRCP_mask=diffRCPs.mask)
 
-print("Done. Run showpr.py to show.")
+print("Done. Run plot.py to show.")
